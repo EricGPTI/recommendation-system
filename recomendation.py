@@ -124,8 +124,8 @@ def get_similares(base, usuario):
     similaridade.reverse()
     return similaridade
 
-# Obter recomendações
-def get_recomendacoes(base, usuario):
+# Obter recomendações de usuários
+def get_recomendacoes_usuarios(base, usuario):
     totais = {}
     soma_similaridade = {}
     for outro in base:
@@ -159,3 +159,29 @@ def load_movie_leans(path='C:/ml-100k'):
         base.setdefault(usuario, {})
         base[usuario][filmes[id_filme]] = float(nota)
     return base
+
+
+def calculate_itens_similares(base):
+    result = {}
+    for item in base:
+        notas = get_similares(base, item)
+        result[item] = notas
+    return result
+
+
+def get_recomendacoes_itens(base_usuario, itens_similares, usuario):
+    notas_usuarios = base_usuario[usuario]
+    notas = {}
+    total_similaridade = {}
+    for item, nota in notas_usuarios.items():
+        for similaridade, item2 in itens_similares[item]:
+            if item2 in notas_usuarios:
+                continue
+            notas.setdefault(item2, 0)
+            notas[item2] += similaridade * nota
+            total_similaridade.setdefault(item2, 0)
+            total_similaridade[item2] += similaridade
+    rankings = [(score/total_similaridade[item], item) for item, score in notas.items()]
+    rankings.sort()
+    rankings.reverse()
+    return rankings[0:30]
